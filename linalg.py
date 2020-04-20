@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 def gsvd(A, B):
     # Generalised Singular Value Decomposition
     AB1 = A @ np.linalg.inv(B)
-    u, s, vt = np.linalg.svd(AB1, full_matrices=False)
+    u, s, vt = np.linalg.svd(AB1, full_matrices=True)
 
     beta = 1 / np.sqrt(1 + s**2)
     alpha = s * beta
@@ -18,9 +18,9 @@ def gsvd(A, B):
     if np.any(np.isclose(beta, 1, rtol=0, atol=1e-8)):
         logger.warn('Some singular value values very close to 1')
 
-    wT = np.linalg.inv(np.diag(alpha)) @ u.T @ A
-    wT /= wT.unit **2
-    return alpha, beta, u, vt.T, wT.T
+    wT = np.linalg.inv(np.diag(alpha)) @ np.linalg.inv(u) @ A
+    w = np.linalg.pinv(wT.value) / wT.unit
+    return alpha, beta, u, vt.T, w
 
 
 def inv_reg_param(sva, svb, u, w, xi0, data, K, err, reg_tweak):
