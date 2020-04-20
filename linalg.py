@@ -48,9 +48,11 @@ def inv_reg_param(sva, svb, u, w, xi0, data, K, err, reg_tweak):
     -------
     opt:
         regularization parameter
+    dem_guess:
+        DEM guess using the given parameter
     """
     data_tilde = data / err
-    nmu = 20
+    nmu = 200
     ntemps = w.shape[0]
     nobs = w.shape[1]
 
