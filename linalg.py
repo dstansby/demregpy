@@ -1,3 +1,5 @@
+import logging
+
 import numpy as np
 import astropy.units as u
 
@@ -70,35 +72,5 @@ def inv_reg_param(sva, svb, u, w, xi0, data, K, err, reg_tweak):
     terms = (intensity_guess - data[0, :]) / err
     norm = np.sum(terms**2, axis=1)
     tomin = norm - reg_tweak * data.size
+    print(mus)
     return mus[np.argmin(np.abs(tomin))]
-
-
-@u.quantity_input(temps=u.K,
-                  K=u.cm**5 / u.s / u.pix,
-                  xi0=u.cm**-5,
-                  L=u.cm**5)
-def dem_guess(temps, K, xi0, L, alpha):
-    """
-    Produce a refined guess for the DEM.
-
-    This follows eqs (6) and (7) from HK12.
-
-    Parameters
-    ----------
-    temps : astropy.quantity.Quantity
-        Temperatures
-    K : astropy.quantity.Quantity
-        Temperature response function.
-    xi0 : astropy.quantity.Quantity
-        Initial DEM guess
-    L : astropy.quantity.Quantity
-        Constraint matrix.
-    alpha : float
-        Regularisation parameter.
-
-    Returns
-    -------
-    dem : astropy.quantity.Quantity
-        DEM estimate.
-    """
-    pass
