@@ -72,5 +72,5 @@ def inv_reg_param(sva, svb, u, w, xi0, data, K, err, reg_tweak):
     terms = (intensity_guess - data[0, :]) / err
     norm = np.sum(terms**2, axis=1)
     tomin = norm - reg_tweak * data.size
-    print(mus)
-    return mus[np.argmin(np.abs(tomin))]
+    muidx = np.argmin(np.abs(tomin))
+    return mus[muidx], dem_guess[:, muidx]
