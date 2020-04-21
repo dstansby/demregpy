@@ -22,13 +22,13 @@ def calc_dem(temps, K, data, data_err):
     Parameters
     ----------
     temps : astropy.quantity.Quantity
-        Temperatures
+        Temperatures at which to calculate the DEM.
     K : astropy.quantity.Quantity
         Temperature response function.
     data : astropy.quantity.Quantity
-        Data.
+        Intensity observations.
     dat_err : astropy.quantity.Qauntity
-        Data errors.
+        Errors on the intensity observations.
 
     Returns
     -------

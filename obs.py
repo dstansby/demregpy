@@ -6,12 +6,13 @@ import numpy as np
 
 class Observation:
     """
-    A combination of an intensity measurement, and the temperature response
-    function for the measurement.
+    A combination of an intensity measurement, the error on that intensity,
+    measurement and the temperature response function for the measurement.
 
     Parameters
     ----------
-    intensity : ndarray
+    intensity : sunpy.map.GenericMap
+        Intensities. Must have uncertainties set.
     temp_response : TemperatureResponse
         Temperature response function.
     """
