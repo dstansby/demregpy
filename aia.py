@@ -26,6 +26,7 @@ l1_map_dir = Path('/Users/dstansby/sunpy/data/dem')
 l15_map_dir = Path('/Users/dstansby/sunpy/data/dem_prepped')
 
 
+@u.quantity_input(wlen=u.angstrom)
 def get_aia_map(wlen, dtime):
     """
     Get AIA map at wavelength *wlen* observed closest to *dtime*.
