@@ -8,8 +8,9 @@ from pathlib import Path
 from aiapy.calibrate import (update_pointing, fix_observer_location,
                              correct_degradation, register)
 from astropy import units as u
-from sunpy.net import Fido, attrs
 from datetime import timedelta
+import numpy as np
+from sunpy.net import Fido, attrs
 from sunpy.map import Map
 from sunpy.time import parse_time
 
@@ -61,9 +62,9 @@ def prep(smap):
     smap = update_pointing(smap)
     smap = correct_degradation(smap)
     smap = register(smap)
-    smap = Map(
-        smap.data / smap.exposure_time.to_value(u.s),
-        smap.meta)
+    # Downsample from 64 to 32 bit
+    data = smap.data.astype(np.float32) / smap.exposure_time.to_value(u.s)
+    smap = Map(data, smap.meta)
     return smap
 
 
