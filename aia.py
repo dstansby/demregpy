@@ -64,7 +64,7 @@ def prep(smap):
     smap = correct_degradation(smap)
     smap = register(smap)
     # Downsample from 64 to 32 bit
-    data = smap.data.astype(np.float32) / smap.exposure_time.to_value(u.s)
+    data = smap.data.astype(np.float32)
     smap = Map(data, smap.meta)
     return smap
 
