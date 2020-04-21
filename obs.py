@@ -1,6 +1,7 @@
 """
 Code for handling observations.
 """
+import astropy.units as u
 import numpy as np
 
 
@@ -33,7 +34,7 @@ class TemperatureResponse:
     responses : astropy.units.Quantity
         Response function.
     """
-    # TODO: use astropy quantity input here
+    @u.quantity_input(temps=u.K, responses=u.cm**5 * u.s**-1 * u.pix**-1)
     def __init__(self, temps, responses):
         if temps.shape != responses.shape:
             raise ValueError('Shape of temps must be the same as '
@@ -44,7 +45,7 @@ class TemperatureResponse:
     def __repr__(self):
         return f'TemperatureResponse, T={self.temps}, response={self.responses}'
 
-    # TODO: use astropy quantity input here
+    @u.quantity_input(temps=u.K)
     def sample(self, temps):
         """
         Sample the temperature repsonse function at temperatures *temps*.
