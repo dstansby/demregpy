@@ -1,6 +1,7 @@
 """
 Functions for fetching and prepping AIA maps.
 """
+from collections import OrderedDict
 import logging
 from pathlib import Path
 
@@ -79,7 +80,7 @@ def get_response_function(wlen):
 
 
 def get_prepped_aia_maps():
-    maps = {}
+    maps = OrderedDict()
     for wlen in wlen_ints:
         f = list(l1_map_dir.glob(f'*{wlen}*.fits'))[0]
         prepped_f = l15_map_dir / f.name
