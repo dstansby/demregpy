@@ -8,27 +8,17 @@ import linalg
 logger = logging.getLogger(__name__)
 
 
-@u.quantity_input(temps=u.K,
-                  K=u.cm**5 / u.s / u.pix,
-                  data=1 / u.pix / u.s,
-                  data_err=1 / u.pix / u.s)
-def calc_dem(temps, K, data, data_err):
+@u.quantity_input(temps=u.K)
+def calc_dem(temps, obs):
     """
     Calculate the DEM.
 
     Parameters
     ----------
-
-    Parameters
-    ----------
     temps : astropy.quantity.Quantity
         Temperatures at which to calculate the DEM.
-    K : astropy.quantity.Quantity
-        Temperature response function.
-    data : astropy.quantity.Quantity
-        Intensity observations.
-    dat_err : astropy.quantity.Qauntity
-        Errors on the intensity observations.
+    obs : dict
+        A dictionary of Observation objects.
 
     Returns
     -------
@@ -36,6 +26,13 @@ def calc_dem(temps, K, data, data_err):
         DEM estimate.
     """
     ntemps = temps.size
+    nobs = len(obs)
+    # Construct temperature response matrix
+    K = np.zeros((nobs, ntemps)) * u.cm**5 / u.s / u.pix
+    # Fill up the K array
+    for i, key in enumerate(obs):
+        K[i, :] = maps[key].temp_response.sample(temps)
+        data[i] = maps[key].intensity.data[pixel[0], pixel[1]]
     # First estimate
     xi0 = np.zeros(ntemps) * data.unit / K.unit
     # First constraint matrix. The exact value of this doesn't matter, but we
@@ -57,6 +54,7 @@ def calc_dem(temps, K, data, data_err):
     L = np.identity(ntemps) * np.mean(K) / np.mean(data)
     alpha = 1
     guess2 = dem_guess(temps, K, data, data_err, guess, L, alpha)
+
     return guess, guess2
 
 
@@ -153,9 +151,9 @@ def inv_reg_param(xi0, data, K, err, reg_tweak, L):
         term1 = np.dot(data_tilde, u[:, i]) * w[:, i] / alpha
         # Loop over candiate mu values
         for j, mu in enumerate(mus):
-            term2 = mu * xi0 / alpha**2
+            # term2 = mu * xi0 / alpha**2
             factor = (phi ** 2) / (phi**2 + mu)
-            xis[:, i, j] = factor * (term1 + term2)
+            xis[:, i, j] = factor * (term1)# + term2)
     # Sum over the observations
     dem_guess = np.sum(xis, axis=1)
     # print(f'DEM guess is {dem_guess}')
