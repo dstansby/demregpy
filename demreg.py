@@ -16,7 +16,7 @@ def calc_dem(temps, obs):
     Parameters
     ----------
     temps : astropy.quantity.Quantity
-        Temperatures at which to calculate the DEM.
+        Temperature bins within which to calculated the DEM.
     obs : dict
         A dictionary of Observation objects.
 
