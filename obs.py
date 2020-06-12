@@ -12,7 +12,7 @@ class Observation:
 
     Parameters
     ----------
-    intensity : sunpy.map.GenericMap
+    intensity : astropy.NDData
         Intensities. Must have uncertainties set.
     temp_response : TemperatureResponse
         Temperature response function.

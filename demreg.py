@@ -25,14 +25,23 @@ def calc_dem(temps, obs):
     dem : astropy.quantity.Quantity
         DEM estimate.
     """
-    ntemps = temps.size
+    ntemps = temps.size - 1
     nobs = len(obs)
     # Construct temperature response matrix
     K = np.zeros((nobs, ntemps)) * u.cm**5 / u.s / u.pix
+    data = np.zeros(nobs) / u.s / u.pix
+    data = [1.5015837, 1.7489849, 29.46018, 78.363713, 90.357413, 3.440197] / u.s / u.pix
+    data_err = data.copy()
     # Fill up the K array
+    #
+    # Set pixel, REMOVE ME EVENTUALLY
+    pixel = np.array([2310, 1800])
     for i, key in enumerate(obs):
-        K[i, :] = maps[key].temp_response.sample(temps)
-        data[i] = maps[key].intensity.data[pixel[0], pixel[1]]
+        tresp = obs[key].temp_response.sample(temps)
+        # Take average at the bin ends
+        K[i, :] = (tresp[1:] + tresp[:-1]) / 2
+        # data[i] = obs[key].intensity.data[pixel[0], pixel[1]] / u.s / u.pix
+        data_err[i] = data[i] * 0.2    # REMOVE THIS ASSUMPTION EVENTUALLY
     # First estimate
     xi0 = np.zeros(ntemps) * data.unit / K.unit
     # First constraint matrix. The exact value of this doesn't matter, but we
@@ -50,12 +59,18 @@ def calc_dem(temps, obs):
     thresh = reltol * np.max(guess)
     guess[guess < thresh] = reltol * np.max(guess)
 
-    # Take a second guess
-    L = np.identity(ntemps) * np.mean(K) / np.mean(data)
-    alpha = 1
-    guess2 = dem_guess(temps, K, data, data_err, guess, L, alpha)
+    guess2 = guess.copy()
+    for i in range(0):
+        # Take a second guess
+        L = np.identity(ntemps) * np.mean(K) * np.mean(guess2) / guess2 / np.mean(data)
+        alpha = 1
+        guess2 = dem_guess(temps, K, data, data_err, guess2, L, alpha)
 
-    return guess, guess2
+    intensity_guess = K @ guess2
+    # Convert from EM to DEM
+    guess /= np.diff(temps)
+    guess2 /= np.diff(temps)
+    return guess, guess2, intensity_guess
 
 
 @u.quantity_input(temps=u.K,
@@ -126,10 +141,17 @@ def inv_reg_param(xi0, data, K, err, reg_tweak, L):
     """
     Ktilde = (K.T / err).T
     sva, svb, u, v, w = linalg.gsvd(Ktilde, L)
+    # print(w.shape)
+    '''import matplotlib.pyplot as plt
+    fig, ax = plt.subplots()
+    for i in range(w.shape[1]):
+        ax.plot(np.geomspace(0.1, 100, 100) * 1e6, w[:, i], label=str(i))
+    ax.set_xscale('log')
+    ax.legend()'''
 
     data_tilde = data / err
     # Number of mu values to try out
-    nmu = 20
+    nmu = 200
     ntemps = w.shape[0]
     nobs = w.shape[1]
 
@@ -140,9 +162,7 @@ def inv_reg_param(xi0, data, K, err, reg_tweak, L):
     minx = np.min(phis)
     maxx = np.max(phis)
     # Choose a range of test values between the min/max values of phi
-    mus = np.geomspace(minx**2 * 1e-3, maxx**2, nmu)
-
-    print(phis / sva**2)
+    mus = np.geomspace(minx**2 * 1e-2, maxx**2, nmu)
 
     # Loop over the terms in the sum (one for each observation)
     for i in range(nobs):
@@ -160,11 +180,22 @@ def inv_reg_param(xi0, data, K, err, reg_tweak, L):
     # Forward model the DEM guess to an intensity guess
     intensity_guess = (K @ dem_guess).T
     # print(f'Intensity guess is {intensity_guess}')
-    terms = (intensity_guess - data[0, :]) / err
+    terms = (intensity_guess - data) / err
     norm = np.sum(terms**2, axis=1)
     # print(f'Norm is {norm}')
-    tomin = norm - reg_tweak * data.size
-    muidx = np.argmin(np.abs(tomin))
+    tomin = np.abs(norm - reg_tweak * data.size)
+    # if force_positive:
+    # tomin[np.sum(dem_guess < 0, axis=0) > 0] = np.nan
+    muidx = np.nanargmin(np.abs(tomin))
+    mu = mus[muidx]
+    '''import matplotlib.pyplot as plt
+    fig, axs = plt.subplots(nrows=2, sharex=True)
+    axs[0].plot(mus, np.sum(dem_guess < 0, axis=0))
+    axs[1].plot(mus, tomin)
+    axs[0].set_xscale('log')
+    for phi in phis**2:
+        axs[0].axvline(phi, color='k')'''
+
     if muidx == 0:
         logger.warn('Selected smallest value of mu')
     return mus[muidx], dem_guess[:, muidx]

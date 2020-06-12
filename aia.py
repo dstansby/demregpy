@@ -93,9 +93,10 @@ def get_prepped_aia_maps():
         else:
             m = Map(prepped_f)
         response = get_response_function(wlen)
+        # Set the data errors to be zero for now
         maps[wlen] = Observation(m, response)
     return maps
 
 
 if __name__ == '__main__':
-    resps = get_response_function(171)
+    resps = get_aia_maps('2012-06-03 00:00:00')
